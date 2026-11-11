@@ -1,0 +1,21 @@
+﻿field,value
+trail_id,karakungei
+name,Karakungei
+city,Almaty
+area,"Medeu district, Medeu area (ridge between the Malaya Almatinka and Butakovka gorges)"
+start_lat,43.163297
+start_lng,77.050543
+start_elevation_m,1569
+end_lat,43.1718
+end_lng,77.046375
+summit_elevation_m,1821 (published; GPS track shows ~1784)
+distance_km,"1.5 one way, ~3 round trip"
+elevation_gain_m,216
+duration,"40–60 min to the summit, 1–1.5 h total"
+difficulty,Easy (FriendHike 2/5)
+season,All year; microspikes advised on shaded sections in winter
+photo_url,TODO — own photo or a photo used with the author's permission
+is_verified,true (desk check); confirmation from trail administration pending
+verified_at,2026-10-20
+verified_by,Raimbek Ayaulym (BA)
+verification_method,Cross-check of 2 GPS tracks (xtravels.kz) against the 2GIS point and FriendHike / zabugorshiki.com descriptions
