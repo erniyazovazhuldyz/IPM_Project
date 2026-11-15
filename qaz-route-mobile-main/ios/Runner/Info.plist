@@ -6,6 +6,8 @@
 	<string>QazRoute shows your current position on the trail map.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires camera access to scan QR codes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>QazRoute uses your photos to set a profile picture.</string>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>

@@ -91,6 +91,22 @@ class MapRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [PersonalInfoScreen]
+class PersonalInfoRoute extends PageRouteInfo<void> {
+  const PersonalInfoRoute({List<PageRouteInfo>? children})
+    : super(PersonalInfoRoute.name, initialChildren: children);
+
+  static const String name = 'PersonalInfoRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const PersonalInfoScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [PremiumScreen]
 class PremiumRoute extends PageRouteInfo<void> {
   const PremiumRoute({List<PageRouteInfo>? children})

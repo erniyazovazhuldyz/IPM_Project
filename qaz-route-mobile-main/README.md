@@ -32,3 +32,11 @@ flutter run --dart-define-from-file=supabase.env.json
 Trail photos are bundled in `assets/` (`assets/trails`, `assets/images`), so
 `preview_image_url` can be either `assets/...` or a normal `https://` link.
 Raw BA data (GPX, GeoJSON, CSV) is in `supabase/data/`.
+
+## Sprint 3 update (Pair 1: account & profile)
+1. Supabase → SQL Editor → run `supabase/sprint3_profiles.sql`
+   (table `profiles`, auto-create profile on sign up, RLS, Storage bucket `avatars`).
+2. `flutter pub get` (new package `image_picker`) → `flutter run --dart-define-from-file=supabase.env.json`
+3. Tests: `flutter test` (`test/profile_test.dart`).
+
+Details, file map, manual test cases TC-04…TC-10 (in Russian): `docs/sprint3_pair1.md`.

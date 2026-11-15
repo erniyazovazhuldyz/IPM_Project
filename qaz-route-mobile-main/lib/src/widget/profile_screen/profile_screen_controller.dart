@@ -1,54 +1,126 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:qaz_route_mobile/src/model/profile_model.dart';
 import 'package:qaz_route_mobile/src/repository/auth_repository.dart';
+import 'package:qaz_route_mobile/src/repository/profile_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-enum ProfileScreenState { loading, idle, error }
+enum ProfileScreenState {
+  /// Грузим профиль.
+  loading,
+
+  /// Никто не вошёл — показываем приглашение войти.
+  signedOut,
+
+  /// Профиль загружен.
+  idle,
+
+  error,
+}
 
 class ProfileScreenController extends ChangeNotifier {
-  ProfileScreenController({required this.repository});
+  ProfileScreenController({
+    required this.authRepository,
+    required this.profileRepository,
+  });
 
-  final AuthRepository repository;
+  final AuthRepository authRepository;
+  final ProfileDataSource profileRepository;
 
-  ProfileScreenState _state = ProfileScreenState.idle;
+  StreamSubscription<AuthState>? _authSubscription;
+
+  /// Для какого пользователя уже загружен (или грузится) профиль —
+  /// чтобы не грузить его повторно на каждое событие (например, обновление токена).
+  String? _loadedUserId;
+
+  ProfileScreenState _state = ProfileScreenState.loading;
 
   ProfileScreenState get state => _state;
 
-  User? _user;
+  ProfileModel? _profile;
 
-  User? get user => _user;
+  ProfileModel? get profile => _profile;
 
   String _errorMessage = '';
 
   String get errorMessage => _errorMessage;
 
-  Future<void> getUser() async {
-    try {
-      _state = ProfileScreenState.loading;
+  /// Вызывается один раз из initState экрана.
+  /// Подписываемся на вход/выход: экран обновится сам, без перезапуска.
+  void start() {
+    if (authRepository.isAuthenticated()) {
+      loadProfile();
+    } else {
+      _state = ProfileScreenState.signedOut;
       notifyListeners();
+    }
+    _authSubscription = authRepository.authStateChanges.listen(
+      _onAuthStateChanged,
+    );
+  }
 
-      final user = await repository.getUser();
-      _user = user;
+  void _onAuthStateChanged(AuthState authState) {
+    final user = authState.session?.user;
 
-      _state = ProfileScreenState.idle;
-    } catch (e) {
-      _state = ProfileScreenState.error;
-      _errorMessage = 'Failed to load profile: ${e.toString()}';
-    } finally {
+    if (user == null) {
+      _loadedUserId = null;
+      _profile = null;
+      _state = ProfileScreenState.signedOut;
       notifyListeners();
+      return;
+    }
+
+    if (user.id != _loadedUserId) {
+      loadProfile();
     }
   }
 
+  Future<void> loadProfile() async {
+    final user = authRepository.currentUser;
+    if (user == null) {
+      _state = ProfileScreenState.signedOut;
+      notifyListeners();
+      return;
+    }
+
+    _loadedUserId = user.id;
+    // Если профиль уже есть на экране (обновление) — не прячем его за крутилкой.
+    if (_profile == null) {
+      _state = ProfileScreenState.loading;
+      notifyListeners();
+    }
+
+    try {
+      final loaded = await profileRepository.getMyProfile();
+      // Пока грузили, пользователь мог выйти — тогда результат не нужен.
+      if (authRepository.currentUser?.id != user.id) return;
+      _profile = loaded;
+      _state = ProfileScreenState.idle;
+    } catch (e) {
+      if (authRepository.currentUser?.id != user.id) return;
+      _loadedUserId = null; // чтобы "Retry" действительно попробовал снова
+      _state = ProfileScreenState.error;
+      _errorMessage = profileErrorMessage(e);
+    }
+    notifyListeners();
+  }
+
+  Future<void> refresh() => loadProfile();
+
   Future<bool> signOut() async {
     try {
-      await repository.signOut();
-
+      await authRepository.signOut();
+      // Состояние signedOut выставит _onAuthStateChanged.
       return true;
     } catch (e) {
       return false;
     }
   }
 
-  Future<void> refresh() async {
-    await getUser();
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }
