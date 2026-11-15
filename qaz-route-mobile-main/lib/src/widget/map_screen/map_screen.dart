@@ -8,6 +8,7 @@ import 'package:qaz_route_mobile/src/model/route_model.dart';
 import 'package:qaz_route_mobile/src/repository/routes_repository.dart';
 import 'package:qaz_route_mobile/src/router/app_router.dart';
 import 'package:qaz_route_mobile/src/widget/common/trail_image.dart';
+import 'package:qaz_route_mobile/src/widget/map_screen/map_focus.dart';
 import 'package:qaz_route_mobile/src/widget/map_screen/map_screen_controller.dart';
 
 @RoutePage()
@@ -26,6 +27,9 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _myPosition;
   bool _locating = false;
 
+  /// The camera can be moved only after the map is ready.
+  bool _mapReady = false;
+
   static const _almaty = LatLng(43.23011246725963, 76.91868747847725);
 
   @override
@@ -34,6 +38,32 @@ class _MapScreenState extends State<MapScreen> {
     _mapScreenController = MapScreenController(repository: RoutesRepository());
     _mapScreenController.loadRoutes();
     _locateMe(moveCamera: false);
+
+    // "Open Map" from a trail screen (US-04).
+    MapFocus.instance.addListener(_onMapFocus);
+    final focused = MapFocus.instance.route;
+    if (focused != null) _mapScreenController.showRoute(focused);
+  }
+
+  void _onMapFocus() {
+    final route = MapFocus.instance.route;
+    if (route == null) return;
+    _mapScreenController.showRoute(route);
+    if (_mapReady) _fitRoute(route);
+  }
+
+  /// Move the camera so the whole trail line is visible.
+  void _fitRoute(RouteModel route) {
+    if (route.path.length > 1) {
+      _mapController.fitCamera(
+        CameraFit.coordinates(
+          coordinates: route.path,
+          padding: const EdgeInsets.fromLTRB(48, 160, 48, 120),
+        ),
+      );
+    } else if (route.path.isNotEmpty) {
+      _mapController.move(route.path.first, 15);
+    }
   }
 
   Future<void> _locateMe({bool moveCamera = true}) async {
@@ -42,7 +72,11 @@ class _MapScreenState extends State<MapScreen> {
 
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        _showMessage('Turn on location services (GPS).');
+        _showMessage(
+          'Turn on location to see your position.',
+          actionLabel: 'Settings',
+          onAction: Geolocator.openLocationSettings,
+        );
         return;
       }
 
@@ -50,8 +84,15 @@ class _MapScreenState extends State<MapScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.deniedForever) {
+        _showMessage(
+          'Location permission is off for QazRoute.',
+          actionLabel: 'Settings',
+          onAction: Geolocator.openAppSettings,
+        );
+        return;
+      }
+      if (permission == LocationPermission.denied) {
         _showMessage('Location permission is needed to show your position.');
         return;
       }
@@ -74,13 +115,37 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _showMessage(String text) {
+  void _showMessage(
+    String text, {
+    String? actionLabel,
+    Future<bool> Function()? onAction,
+  }) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        duration: Duration(seconds: onAction == null ? 4 : 8),
+        action: onAction == null
+            ? null
+            : SnackBarAction(
+                label: actionLabel ?? 'Settings',
+                onPressed: () async {
+                  try {
+                    await onAction();
+                  } catch (_) {
+                    // Not supported on this platform (e.g. web).
+                  }
+                },
+              ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    MapFocus.instance.removeListener(_onMapFocus);
     _mapScreenController.dispose();
     super.dispose();
   }
@@ -102,18 +167,23 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.lightGreen600,
-        tooltip: 'My location',
-        onPressed: _locating ? null : _locateMe,
-        child: _locating
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              )
-            : const Icon(Icons.my_location),
+      // The app's bottom menu is drawn over this screen (extendBody), so lift
+      // the My location button above it; otherwise it is hidden behind it.
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.lightGreen600,
+          tooltip: 'My location',
+          onPressed: _locating ? null : _locateMe,
+          child: _locating
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : const Icon(Icons.my_location),
+        ),
       ),
       body: SafeArea(
         child: ListenableBuilder(
@@ -126,9 +196,14 @@ class _MapScreenState extends State<MapScreen> {
                 Positioned.fill(
                   child: FlutterMap(
                     mapController: _mapController,
-                    options: const MapOptions(
+                    options: MapOptions(
                       initialCenter: _almaty,
                       initialZoom: 10,
+                      onMapReady: () {
+                        _mapReady = true;
+                        final focused = MapFocus.instance.route;
+                        if (focused != null) _fitRoute(focused);
+                      },
                     ),
                     children: [
                       TileLayer(

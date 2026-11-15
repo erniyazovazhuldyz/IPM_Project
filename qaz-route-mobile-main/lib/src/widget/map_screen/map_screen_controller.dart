@@ -46,4 +46,10 @@ class MapScreenController extends ChangeNotifier {
     _selectedRoute = _selectedRoute?.id == route.id ? null : route;
     notifyListeners();
   }
+
+  /// Show this trail's line (used by "Open Map" on the trail screen).
+  void showRoute(RouteModel route) {
+    _selectedRoute = route;
+    notifyListeners();
+  }
 }
