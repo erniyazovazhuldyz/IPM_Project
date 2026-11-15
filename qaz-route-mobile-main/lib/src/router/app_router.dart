@@ -6,6 +6,7 @@ import 'package:qaz_route_mobile/src/widget/auth_screen/auth_screen.dart';
 import 'package:qaz_route_mobile/src/widget/home_screen/home_screen.dart';
 import 'package:qaz_route_mobile/src/widget/home_screen/home_screen_wrapper.dart';
 import 'package:qaz_route_mobile/src/widget/map_screen/map_screen.dart';
+import 'package:qaz_route_mobile/src/widget/personal_info_screen/personal_info_screen.dart';
 import 'package:qaz_route_mobile/src/widget/premium_screen/premium_screen.dart';
 import 'package:qaz_route_mobile/src/widget/profile_screen/profile_screen.dart';
 import 'package:qaz_route_mobile/src/widget/profile_screen/profile_screen_wrapper.dart';
@@ -18,8 +19,9 @@ part 'app_router.gr.dart';
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
-        // Страница авторизации
-        // Она больше не открывается автоматически
+        // Страница входа / регистрации.
+        // Приложение открывается без входа (маршруты видны всем),
+        // а войти можно с вкладки Profile -> "Sign In / Sign Up".
         AutoRoute(
           page: AuthRoute.page,
           path: '/auth',
@@ -67,6 +69,11 @@ class AppRouter extends RootStackRouter {
                   page: ProfileRoute.page,
                   path: 'profile',
                   initial: true,
+                ),
+                // Редактирование профиля (Пара 1)
+                AutoRoute(
+                  page: PersonalInfoRoute.page,
+                  path: 'personal-info',
                 ),
               ],
             ),
