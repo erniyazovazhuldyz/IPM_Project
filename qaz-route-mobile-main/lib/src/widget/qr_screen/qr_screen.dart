@@ -35,20 +35,40 @@ class _QrScreenState extends State<QrScreen> {
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
-    final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isNotEmpty) {
-      final String? scannedData = barcodes.first.rawValue;
-      if (scannedData != null && !_isQRDetected) {
-        _isQRDetected = true;
-        await _qrScreenController.getRouteById(scannedData);
-        final ctx = context;
-        final route = _qrScreenController.scannedRoute;
-        if (ctx.mounted && route != null) {
-          ctx.router.navigate(RouteDetailsRoute(route: route));
-        }
-        Future.delayed(Duration(seconds: 10), () => _isQRDetected = false);
+    // Handle one QR at a time; the camera reports the same code many times.
+    if (_isQRDetected || capture.barcodes.isEmpty) return;
+
+    final String scannedData = capture.barcodes.first.rawValue?.trim() ?? '';
+    if (scannedData.isEmpty) return;
+
+    _isQRDetected = true;
+    final route = await _qrScreenController.getRouteById(scannedData);
+
+    if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+
+      if (route != null) {
+        // Correct QR: open this trail (US-07).
+        context.router.navigate(RouteDetailsRoute(route: route));
+      } else if (_qrScreenController.state == QrScreenState.noInternet) {
+        // No connection: stay on the QR screen so the user can try again.
+        messenger.showSnackBar(
+          SnackBar(content: Text(_qrScreenController.errorMessage)),
+        );
+      } else {
+        // Wrong QR: "Route not found" and the Home screen (US-08).
+        messenger.showSnackBar(
+          SnackBar(content: Text(_qrScreenController.errorMessage)),
+        );
+        context.router.navigate(
+          const HomeRouteWrapper(children: [HomeRoute()]),
+        );
       }
     }
+
+    // Short pause so the same code is not handled twice.
+    Future.delayed(const Duration(seconds: 2), () => _isQRDetected = false);
   }
 
   @override
@@ -75,6 +95,19 @@ class _QrScreenState extends State<QrScreen> {
               child: MobileScanner(
                 controller: _controller,
                 onDetect: _onDetect,
+              ),
+            ),
+            // Must be Positioned.fill: a non-positioned child would shrink
+            // the whole Stack (and the camera view) to zero size.
+            Positioned.fill(
+              child: ListenableBuilder(
+                listenable: _qrScreenController,
+                builder: (context, child) {
+                  if (_qrScreenController.state != QrScreenState.loading) {
+                    return const SizedBox.shrink();
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
               ),
             ),
             Positioned.fill(
