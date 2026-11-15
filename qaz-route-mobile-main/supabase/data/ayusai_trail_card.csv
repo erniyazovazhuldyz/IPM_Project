@@ -1,0 +1,21 @@
+﻿field,value
+trail_id,ayusai
+name,Ayusai Waterfalls
+city,Almaty
+area,"Ile-Alatau National Park, Ayusai gorge (Kokshoky direction, south of Almaty)"
+start_lat,43.101132
+start_lng,76.944365
+start_elevation_m,1671
+end_lat,43.086859
+end_lng,76.945117
+summit_elevation_m,"1998 (upper waterfall, GPS track)"
+distance_km,"2.2 one way, ~4.4 round trip"
+elevation_gain_m,324
+duration,"1–1.5 h to the upper waterfall, 2–2.5 h total"
+difficulty,"Moderate (steady climb, rocky path along the stream)"
+season,Late spring to autumn; icy in winter
+photo_url,TODO — own photo or a photo used with the author's permission
+is_verified,true (desk check); field check pending
+verified_at,2026-11-15
+verified_by,Sagdatova Alua (QA)
+verification_method,"Wikiloc GPS track ""Три водопада Аюсай"" (there-and-back recording, both directions overlap within ~10 m); path rebuilt from the lowest point (trailhead) to the highest point (upper waterfall) and simplified (RDP, 5 m)"
