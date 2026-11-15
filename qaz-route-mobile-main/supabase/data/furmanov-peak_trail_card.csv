@@ -1,0 +1,21 @@
+﻿field,value
+trail_id,furmanov-peak
+name,Furmanov Peak
+city,Almaty
+area,"Medeu area, ridge east of the Medeu ice rink (Ile-Alatau National Park)"
+start_lat,43.161043
+start_lng,77.055623
+start_elevation_m,1651
+end_lat,43.149837
+end_lng,77.115752
+summit_elevation_m,~3050 (GPS track shows 3080)
+distance_km,"7.2 one way, ~14.5 round trip"
+elevation_gain_m,1432
+duration,"3.5–5 h to the summit, 6–8 h total"
+difficulty,"Hard (long steep climb, ~1400 m gain)"
+season,All year; in winter microspikes and warm gear needed
+photo_url,TODO — own photo or a photo used with the author's permission
+is_verified,true (desk check); field check pending
+verified_at,2026-11-15
+verified_by,Sagdatova Alua (QA)
+verification_method,"Wikiloc GPS track ""Medeo – Furmanov Peak, and Back"" (id 122464435, recorded 2023-01-02); up and down overlap, track starts and ends near Medeu; path = start to highest point, simplified (RDP, 10 m)"
