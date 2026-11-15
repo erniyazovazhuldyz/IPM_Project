@@ -17,6 +17,8 @@ final class RouteModel {
     this.elevationGainM,
     this.maxElevationM,
     this.isVerified = false,
+    this.verifiedAt,
+    this.verifiedBy,
   });
 
   final String id;
@@ -38,6 +40,12 @@ final class RouteModel {
   final int? elevationGainM;
   final int? maxElevationM;
   final bool isVerified;
+
+  /// Date of the last on-site check of the trail (US-03).
+  final DateTime? verifiedAt;
+
+  /// Who checked the trail, e.g. "Raimbek Ayaulym (BA)".
+  final String? verifiedBy;
 
   /// City shown on cards; falls back to [location] for old rows.
   String get displayCity =>
@@ -67,6 +75,26 @@ final class RouteModel {
     return d[0].toUpperCase() + d.substring(1).toLowerCase();
   }
 
+  /// "2026-10-20" -> "20.10.2026"; null if the trail has no check date.
+  String? formattedVerifiedAt() {
+    final d = verifiedAt;
+    if (d == null) return null;
+    final day = d.day.toString().padLeft(2, '0');
+    final month = d.month.toString().padLeft(2, '0');
+    return '$day.$month.${d.year}';
+  }
+
+  /// First point of the trail line = where the hike starts (US-02).
+  LatLng? get startPoint => path.isEmpty ? null : path.first;
+
+  /// Start point as text, e.g. "43.16330, 77.05054".
+  String? formattedStartPoint() {
+    final p = startPoint;
+    if (p == null) return null;
+    return '${p.latitude.toStringAsFixed(5)}, '
+        '${p.longitude.toStringAsFixed(5)}';
+  }
+
   factory RouteModel.fromMap(Map<String, dynamic> map) {
     return RouteModel(
       id: map['id'].toString(),
@@ -92,6 +120,8 @@ final class RouteModel {
       elevationGainM: (map['elevation_gain_m'] as num?)?.toInt(),
       maxElevationM: (map['max_elevation_m'] as num?)?.toInt(),
       isVerified: (map['is_verified'] as bool?) ?? false,
+      verifiedAt: DateTime.tryParse(map['verified_at']?.toString() ?? ''),
+      verifiedBy: map['verified_by'] as String?,
     );
   }
 }

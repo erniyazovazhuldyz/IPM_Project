@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:qaz_route_mobile/src/model/route_model.dart';
 import 'package:qaz_route_mobile/src/repository/routes_repository.dart';
 
-enum QrScreenState { loading, idle, error }
+/// What happened with the last scanned QR code.
+enum QrScreenState { idle, loading, found, notFound, noInternet }
 
 class QrScreenController extends ChangeNotifier {
   QrScreenController({required this.repository});
@@ -15,26 +16,38 @@ class QrScreenController extends ChangeNotifier {
 
   RouteModel? _scannedRoute;
 
+  /// The trail of the LAST scan only. It is null when the last scan failed,
+  /// so an old trail is never opened by mistake (BUG-3).
   RouteModel? get scannedRoute => _scannedRoute;
 
   String _errorMessage = '';
 
   String get errorMessage => _errorMessage;
 
-  Future<void> getRouteById(String id) async {
+  /// Looks up a trail by the text from the QR code (numeric id or slug).
+  /// Returns the trail, or null if it was not found or there is no internet.
+  Future<RouteModel?> getRouteById(String id) async {
+    // Forget the previous scan before starting a new one (BUG-3).
+    _scannedRoute = null;
+    _errorMessage = '';
+    _state = QrScreenState.loading;
+    notifyListeners();
+
     try {
-      _state = QrScreenState.loading;
-      notifyListeners();
-
-      final route = await repository.getRouteById(id);
+      final route = await repository.getRouteById(id.trim());
       _scannedRoute = route;
-
-      _state = QrScreenState.idle;
-    } catch (e) {
-      _state = QrScreenState.error;
-      _errorMessage = e is NoInternetException
-          ? 'No internet connection'
-          : 'Trail not found: ${e.toString()}';
+      _state = QrScreenState.found;
+      return route;
+    } on NoInternetException {
+      _state = QrScreenState.noInternet;
+      _errorMessage =
+          'No internet connection. Check Wi-Fi or mobile data and try again.';
+      return null;
+    } catch (_) {
+      // Unknown QR text, unverified trail or any other lookup error.
+      _state = QrScreenState.notFound;
+      _errorMessage = 'Route not found';
+      return null;
     } finally {
       notifyListeners();
     }

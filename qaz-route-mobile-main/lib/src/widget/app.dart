@@ -23,6 +23,7 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       routerConfig: _router.config(
         navigatorObservers: () => [AutoRouteObserver()],
       ),
