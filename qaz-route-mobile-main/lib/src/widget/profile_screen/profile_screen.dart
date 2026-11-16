@@ -6,6 +6,8 @@ import 'package:qaz_route_mobile/src/repository/profile_repository.dart';
 import 'package:qaz_route_mobile/src/router/app_router.dart';
 import 'package:qaz_route_mobile/src/widget/common/profile_avatar.dart';
 import 'package:qaz_route_mobile/src/widget/profile_screen/profile_screen_controller.dart';
+import 'package:qaz_route_mobile/src/widget/saved_routes/saved_routes_controller.dart';
+import 'package:qaz_route_mobile/src/widget/saved_routes/saved_routes_section.dart';
 
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
@@ -86,7 +88,11 @@ class _ProfileScreenIdle extends StatelessWidget {
 
     return RefreshIndicator(
       color: AppColors.lightGreen600,
-      onRefresh: profileScreenController.refresh,
+      // Потянуть вниз — обновить и профиль, и сохранённые маршруты (US-10).
+      onRefresh: () => Future.wait([
+        profileScreenController.refresh(),
+        SavedRoutesController.instance.refresh(),
+      ]),
       child: ListView(
         // bottom padding: нижнее меню перекрывает контент (extendBody: true)
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
@@ -159,6 +165,10 @@ class _ProfileScreenIdle extends StatelessWidget {
           // ---------- Пара 2: сюда добавить разделы ----------
           // "Favorites" и "History / stats" (пройденные маршруты).
           // Например: const SizedBox(height: 32), FavoritesSection(), ...
+
+          // US-10: «My routes» — сохранённые маршруты
+          const SizedBox(height: 32),
+          const SavedRoutesSection(),
 
           const SizedBox(height: 32),
           const Text(
