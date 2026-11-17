@@ -7,13 +7,20 @@ import 'package:qaz_route_mobile/src/repository/routes_repository.dart';
 import 'package:qaz_route_mobile/src/router/app_router.dart';
 import 'package:qaz_route_mobile/src/widget/common/trail_image.dart';
 import 'package:qaz_route_mobile/src/widget/home_screen/home_screen_controller.dart';
+import 'package:qaz_route_mobile/src/widget/saved_routes/save_route_button.dart';
+import 'package:qaz_route_mobile/src/widget/saved_routes/saved_routes_controller.dart';
 
 @RoutePage()
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.repository});
+  const HomeScreen({super.key, this.repository, this.savedRoutes});
 
   /// For tests. In the app the Supabase [RoutesRepository] is used.
   final TrailsDataSource? repository;
+
+  /// US-10: heart on trail cards. In the app the shared
+  /// [SavedRoutesController.instance] is used. In tests with a fake
+  /// [repository] and no [savedRoutes] the heart is hidden (no Supabase there).
+  final SavedRoutesController? savedRoutes;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -79,6 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
               case HomeScreenState.idle:
                 return _HomeScreenIdle(
                   homeScreenController: _homeScreenController,
+                  savedRoutes: widget.savedRoutes ??
+                      (widget.repository == null
+                          ? SavedRoutesController.instance
+                          : null),
                 );
             }
           },
@@ -89,9 +100,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeScreenIdle extends StatelessWidget {
-  const _HomeScreenIdle({required this.homeScreenController});
+  const _HomeScreenIdle({
+    required this.homeScreenController,
+    this.savedRoutes,
+  });
 
   final HomeScreenController homeScreenController;
+  final SavedRoutesController? savedRoutes;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +163,10 @@ class _HomeScreenIdle extends StatelessWidget {
               sliver: SliverList.separated(
                 itemCount: routes.length,
                 itemBuilder: (context, index) {
-                  return _TrailCard(route: routes[index]);
+                  return _TrailCard(
+                    route: routes[index],
+                    savedRoutes: savedRoutes,
+                  );
                 },
                 separatorBuilder: (context, index) {
                   return const SizedBox(height: 12);
@@ -367,9 +385,12 @@ class _HomeScreenMessage extends StatelessWidget {
 }
 
 class _TrailCard extends StatelessWidget {
-  const _TrailCard({required this.route});
+  const _TrailCard({required this.route, this.savedRoutes});
 
   final RouteModel route;
+
+  /// null = no heart on the card (tests).
+  final SavedRoutesController? savedRoutes;
 
   @override
   Widget build(BuildContext context) {
@@ -445,6 +466,13 @@ class _TrailCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // US-10: save the trail right from the card.
+              if (savedRoutes != null)
+                SaveRouteButton(
+                  route: route,
+                  color: AppColors.lightGreen600,
+                  controller: savedRoutes,
+                ),
             ],
           ),
         ),

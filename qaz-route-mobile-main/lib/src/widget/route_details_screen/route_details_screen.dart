@@ -5,6 +5,7 @@ import 'package:qaz_route_mobile/src/model/route_model.dart';
 import 'package:qaz_route_mobile/src/router/app_router.dart';
 import 'package:qaz_route_mobile/src/widget/common/trail_image.dart';
 import 'package:qaz_route_mobile/src/widget/map_screen/map_focus.dart';
+import 'package:qaz_route_mobile/src/widget/saved_routes/save_route_button.dart';
 
 @RoutePage()
 class RouteDetailsScreen extends StatefulWidget {
@@ -49,6 +50,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             fontSize: 24,
           ),
         ),
+        // US-10: сохранить маршрут («сердечко»).
+        actions: [SaveRouteButton(route: route)],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(

@@ -40,3 +40,11 @@ Raw BA data (GPX, GeoJSON, CSV) is in `supabase/data/`.
 3. Tests: `flutter test` (`test/profile_test.dart`).
 
 Details, file map, manual test cases TC-04…TC-10 (in Russian): `docs/sprint3_pair1.md`.
+
+## US-10 update (Saved routes)
+1. Supabase → SQL Editor → run `supabase/us10_saved_routes.sql`
+   (table `saved_routes`, RLS: each user sees only own saved trails).
+2. `flutter pub get` → `flutter run --dart-define-from-file=supabase.env.json`
+3. Tests: `flutter test test/saved_routes_test.dart`.
+
+Details, file map, manual test cases TC-11…TC-15 (in Russian): `docs/us10_saved_routes.md`.
